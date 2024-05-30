@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>リバーシゲーム</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+        #board {
+            display: grid;
+            grid-template-columns: repeat(8, 50px);
+            grid-template-rows: repeat(8, 50px);
+            gap: 1px;
+        }
+        .cell {
+            width: 50px;
+            height: 50px;
+            background-color: green;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+        .black {
+            background-color: black;
+            border-radius: 50%;
+            width: 80%;
+            height: 80%;
+        }
+        .white {
+            background-color: white;
+            border-radius: 50%;
+            width: 80%;
+            height: 80%;
+        }
+    </style>
+</head>
+<body>
+    <div id="board"></div>
+    <script>
+        const board = document.getElementById('board');
+        let currentPlayer = 'black';
+
+        // Initialize the board
+        const cells = [];
+        for (let i = 0; i < 8; i++) {
+            cells[i] = [];
+            for (let j = 0; j < 8; j++) {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                cell.dataset.row = i;
+                cell.dataset.col = j;
+                cell.addEventListener('click', handleCellClick);
+                board.appendChild(cell);
+                cells[i][j] = cell;
+            }
+        }
+
+        // Initial positions
+        cells[3][3].appendChild(createDisc('white'));
+        cells[3][4].appendChild(createDisc('black'));
+        cells[4][3].appendChild(createDisc('black'));
+        cells[4][4].appendChild(createDisc('white'));
+
+        function createDisc(color) {
+            const disc = document.createElement('div');
+            disc.classList.add(color);
+            return disc;
+        }
+
+        function handleCellClick(event) {
+            const cell = event.target;
+            const row = parseInt(cell.dataset.row);
+            const col = parseInt(cell.dataset.col);
+
+            if (cell.firstChild) {
+                return; // Skip if the cell is already occupied
+            }
+
+            if (isValidMove(row, col, currentPlayer)) {
+                placeDisc(row, col, currentPlayer);
+                flipDiscs(row, col, currentPlayer);
+                currentPlayer = currentPlayer === 'black' ? 'white' : 'black';
+            }
+        }
+
+        function isValidMove(row, col, player) {
+            const opponent = player === 'black' ? 'white' : 'black';
+            return checkDirection(row, col, player, opponent, -1, 0) ||
+                   checkDirection(row, col, player, opponent, 1, 0) ||
+                   checkDirection(row, col, player, opponent, 0, -1) ||
+                   checkDirection(row, col, player, opponent, 0, 1) ||
+                   checkDirection(row, col, player, opponent, -1, -1) ||
+                   checkDirection(row, col, player, opponent, -1, 1) ||
+                   checkDirection(row, col, player, opponent, 1, -1) ||
+                   checkDirection(row, col, player, opponent, 1, 1);
+        }
+
+        function checkDirection(row, col, player, opponent, rowInc, colInc) {
+            let r = row + rowInc;
+            let c = col + colInc;
+            let hasOpponentDisc = false;
+
+            while (r >= 0 && r < 8 && c >= 0 && c < 8 && cells[r][c].firstChild && cells[r][c].firstChild.classList.contains(opponent)) {
+                r += rowInc;
+                c += colInc;
+                hasOpponentDisc = true;
+            }
+
+            if (hasOpponentDisc && r >= 0 && r < 8 && c >= 0 && c < 8 && cells[r][c].firstChild && cells[r][c].firstChild.classList.contains(player)) {
+                return true;
+            }
+
+            return false;
+        }
+
+        function placeDisc(row, col, player) {
+            cells[row][col].appendChild(createDisc(player));
+        }
+
+        function flipDiscs(row, col, player) {
+            const opponent = player === 'black' ? 'white' : 'black';
+            flipDirection(row, col, player, opponent, -1, 0);
+            flipDirection(row, col, player, opponent, 1, 0);
+            flipDirection(row, col, player, opponent, 0, -1);
+            flipDirection(row, col, player, opponent, 0, 1);
+            flipDirection(row, col, player, opponent, -1, -1);
+            flipDirection(row, col, player, opponent, -1, 1);
+            flipDirection(row, col, player, opponent, 1, -1);
+            flipDirection(row, col, player, opponent, 1, 1);
+        }
+
+        function flipDirection(row, col, player, opponent, rowInc, colInc) {
+            let r = row + rowInc;
+            let c = col + colInc;
+            const discsToFlip = [];
+
+            while (r >= 0 && r < 8 && c >= 0 && c < 8 && cells[r][c].firstChild && cells[r][c].firstChild.classList.contains(opponent)) {
+                discsToFlip.push(cells[r][c].firstChild);
+                r += rowInc;
+                c += colInc;
+            }
+
+            if (r >= 0 && r < 8 && c >= 0 && c < 8 && cells[r][c].firstChild && cells[r][c].firstChild.classList.contains(player)) {
+                discsToFlip.forEach(disc => {
+                    disc.classList.remove(opponent);
+                    disc.classList.add(player);
+                });
+            }
+        }
+    </script>
+</body>
+</html>
